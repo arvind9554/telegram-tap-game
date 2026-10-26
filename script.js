@@ -1,5 +1,8 @@
-let tg = window.Telegram.WebApp;
-tg.expand();
+// Safe initialization for Telegram WebApp
+let tg = window.Telegram && window.Telegram.WebApp ? window.Telegram.WebApp : null;
+if (tg && tg.expand) {
+    tg.expand();
+}
 
 let score = 0;
 let energy = 1000;
@@ -20,8 +23,8 @@ function handleTap(clientX, clientY) {
     score += 1;
     updateUI();
 
-    // Haptic Feedback
-    if (tg.HapticFeedback) {
+    // Haptic Feedback (Only runs inside Telegram)
+    if (tg && tg.HapticFeedback) {
         tg.HapticFeedback.impactOccurred('light');
     }
 
