@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>AarwinCoin Tap Game</title>
+
+    <!-- Telegram Web App SDK -->
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+
+    <!-- Canvas Confetti for Satisfying Effects -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <div class="game-container">
+        <!-- Header / Stats -->
+        <div class="header">
+            <div class="token-badge">💎 ARWINCoin</div>
+            <div class="level-badge">Gold Tier</div>
+        </div>
+
+        <!-- Score Board -->
+        <div class="score-section">
+            <span class="score-title">TOTAL BALANCE</span>
+            <div class="score-container">
+                <span class="currency-symbol">⚡</span>
+                <h1 class="score" id="score">0</h1>
+            </div>
+        </div>
+
+        <!-- Main Tapping Area -->
+        <div class="tap-area">
+            <div class="coin-wrapper" id="coinWrapper">
+                <div class="coin-glow"></div>
+                <div class="coin-card" id="coin">
+                    <div class="coin-front">
+                        <span class="coin-icon">🪙</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Energy Bar & Footer -->
+        <div class="footer-info">
+            <div class="energy-container">
+                <div class="energy-header">
+                    <span>⚡ Energy</span>
+                    <span id="energyText">1000 / 1000</span>
+                </div>
+                <div class="energy-bar">
+                    <div class="energy-fill" id="energyFill" style="width: 100%;"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
