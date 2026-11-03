@@ -1,4 +1,4 @@
-// Unique User Profile & Emoji setup for ARWIN with Telegram Integration
+// Unique User Profile & Emoji setup for ARWIN with Permanent Cross-Device ID
 export const UserProfile = {
     getEmoji: function() {
         const emojis = ['🦁', '🐯', '🦊', '🐼', '🦄', '🚀', '⚡', '🔥', '💎', '👑'];
@@ -10,18 +10,18 @@ export const UserProfile = {
         return savedEmoji;
     },
 
-  getUserId: function() {
+    getUserId: function() {
         let uid = localStorage.getItem('arwin_uid');
         
-        // Telegram WebApp ka user data check karo
+        // 1. Pehle check karo ki kya Telegram WebApp user data available hai
         const tgUser = window.Telegram?.WebApp?.initDataUnsafe?.user;
         
         if (tgUser && tgUser.id) {
-            // Agar Telegram user ID milti hai, toh hamesha permanent Telegram ID hi use hogi (chahe phone ho ya laptop)
             uid = `TG_${tgUser.id}`;
         } else if (!uid) {
-            // Agar Telegram data bilkul na mile (jaise normal PC browser me), tabhi random fallback banega
-            uid = 'ARWIN_' + Math.floor(100000 + Math.random() * 900000);
+            // 2. Agar pehle se koi UID localStorage me nahi hai aur Telegram data bhi nahi mila,
+            // toh random generate karne ki jagah ek fixed Master ID use karo taaki phone aur PC par same rahe!
+            uid = 'ARWIN_PLAYER_PRO';
         }
         
         localStorage.setItem('arwin_uid', uid);
@@ -35,7 +35,6 @@ export const UserProfile = {
         };
         console.log(`ARWIN Profile Loaded: ID -> ${profileData.userId}, Emoji -> ${profileData.emoji}`);
         
-        // DOM elements update karna taaki UI par real ID aur emoji dikhe
         const userIdTextEl = document.getElementById('userIdText');
         const userEmojiEl = document.getElementById('userEmoji');
         
@@ -50,5 +49,4 @@ export const UserProfile = {
     }
 };
 
-// Global scope me attach karna taaki doosri files easily access kar sakein
 window.UserProfile = UserProfile;
