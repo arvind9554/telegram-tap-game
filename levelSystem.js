@@ -8,11 +8,16 @@ export const LevelSystem = {
         const savedAds = localStorage.getItem('arwin_ads_watched');
         if (savedLevel !== null) this.currentLevel = parseInt(savedLevel, 10);
         if (savedAds !== null) this.adsWatchedForLevel = parseInt(savedAds, 10);
+        
+        // Page load hote hi UI update karo
+        this.updateLevelUI();
     },
 
     save: function() {
         localStorage.setItem('arwin_level', this.currentLevel.toString());
         localStorage.setItem('arwin_ads_watched', this.adsWatchedForLevel.toString());
+        // Save hote hi UI update karo taaki badge sync rahe
+        this.updateLevelUI();
     },
 
     // Return coins per tap based on current level
@@ -21,6 +26,15 @@ export const LevelSystem = {
         if (this.currentLevel === 2) return 7;
         if (this.currentLevel === 3) return 15;
         return 1;
+    },
+
+    // UI badge aur multiplier ko dynamically refresh karne ka function
+    updateLevelUI: function() {
+        const levelBadgeEl = document.getElementById('levelBadge');
+        if (levelBadgeEl) {
+            let multiplier = this.getTapPower();
+            levelBadgeEl.innerHTML = `⭐ Level <span id="currentLevelNum">${this.currentLevel}</span> (${multiplier}x)`;
+        }
     },
 
     // Check automatic upgrade when score reaches threshold (e.g. 1,00,000 for Level 1 completion)

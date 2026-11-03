@@ -1,4 +1,4 @@
-// Unique User Profile & Emoji setup for ARWIN
+// Unique User Profile & Emoji setup for ARWIN with Telegram Integration
 export const UserProfile = {
     getEmoji: function() {
         const emojis = ['🦁', '🐯', '🦊', '🐼', '🦄', '🚀', '⚡', '🔥', '💎', '👑'];
@@ -13,7 +13,15 @@ export const UserProfile = {
     getUserId: function() {
         let uid = localStorage.getItem('arwin_uid');
         if (!uid) {
-            uid = 'ARWIN_' + Math.floor(100000 + Math.random() * 900000);
+            // Check if Telegram WebApp user data is available
+            const tgUser = window.Telegram?.WebApp?.initDataUnsafe?.user;
+            if (tgUser && tgUser.id) {
+                // Use actual Telegram username or first name + ID if available
+                uid = tgUser.username ? `@${tgUser.username}` : `${tgUser.first_name}_${tgUser.id}`;
+            } else {
+                // Fallback for regular browser testing
+                uid = 'ARWIN_' + Math.floor(100000 + Math.random() * 900000);
+            }
             localStorage.setItem('arwin_uid', uid);
         }
         return uid;
@@ -25,6 +33,21 @@ export const UserProfile = {
             emoji: this.getEmoji()
         };
         console.log(`ARWIN Profile Loaded: ID -> ${profileData.userId}, Emoji -> ${profileData.emoji}`);
+        
+        // DOM elements update karna taaki UI par real ID aur emoji dikhe
+        const userIdTextEl = document.getElementById('userIdText');
+        const userEmojiEl = document.getElementById('userEmoji');
+        
+        if (userIdTextEl) {
+            userIdTextEl.innerText = profileData.userId;
+        }
+        if (userEmojiEl) {
+            userEmojiEl.innerText = profileData.emoji;
+        }
+
         return profileData;
     }
 };
+
+// Global scope me attach karna taaki doosri files easily access kar sakein
+window.UserProfile = UserProfile;

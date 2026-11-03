@@ -5,7 +5,9 @@ import { LevelSystem } from './levelSystem.js';
 const myProfile = UserProfile.initProfile();
 LevelSystem.init();
 
-
+// Unique keys based on User ID for complete isolation
+const USER_COIN_KEY = `arwin_coins_${myProfile.userId}`;
+const USER_ENERGY_KEY = `arwin_energy_${myProfile.userId}`;
 
 // Profile aur Level UI Elements ko update karne ke liye
 const userEmojiEl = document.getElementById('userEmoji');
@@ -33,10 +35,10 @@ const energyFill = document.getElementById('energyFill');
 const coinWrapper = document.getElementById('coinWrapper');
 const coin = document.getElementById('coin');
 
-// --- LocalStorage Functions (Zero Cost Score Saving) ---
+// --- LocalStorage Functions (User-Specific Isolated Storage) ---
 function loadScore(callback) {
     try {
-        const value = localStorage.getItem('arwin_coins');
+        const value = localStorage.getItem(USER_COIN_KEY);
         if (value !== null) {
             callback(parseInt(value, 10));
         } else {
@@ -49,22 +51,43 @@ function loadScore(callback) {
 
 function saveScore(coins) {
     try {
-        localStorage.setItem('arwin_coins', coins.toString());
+        localStorage.setItem(USER_COIN_KEY, coins.toString());
     } catch (err) {
         console.log('Failed to save score:', err);
     }
 }
 
-// Update Score and Energy Bar (Upar define karna zaroori hai taaki loadScore me call ho sake)
+// Load saved Energy for this specific user
+function loadEnergy() {
+    try {
+        const savedEnergy = localStorage.getItem(USER_ENERGY_KEY);
+        if (savedEnergy !== null) {
+            energy = parseInt(savedEnergy, 10);
+        }
+    } catch (err) {
+        console.log('Failed to load energy:', err);
+    }
+}
+
+function saveEnergy() {
+    try {
+        localStorage.setItem(USER_ENERGY_KEY, energy.toString());
+    } catch (err) {
+        console.log('Failed to save energy:', err);
+    }
+}
+
+// Update Score and Energy Bar
 function updateUI() {
     if (scoreDisplay) scoreDisplay.textContent = score;
     if (energyText) energyText.textContent = `${energy} / ${maxEnergy}`;
     if (energyFill) energyFill.style.width = `${(energy / maxEnergy) * 100}%`;
 }
 
-// 2. Ab LocalStorage se saved score fetch karein
+// 2. Ab LocalStorage se saved score aur energy fetch karein
 loadScore((savedScore) => {
     score = savedScore;
+    loadEnergy();
     updateUI();
 });
 
@@ -81,6 +104,7 @@ function handleTap(clientX, clientY) {
     LevelSystem.checkAutoUpgrade(score);
     updateUI();
     saveScore(score); // Har tap par score save hota rahega
+    saveEnergy();     // Energy bhi save hoti rahegi
 
     // Haptic Feedback (Only runs inside Telegram)
     if (tg && tg.HapticFeedback) {
@@ -129,7 +153,7 @@ if (coinWrapper) {
 function createFloatingText(x, y, text = '+1') {
     const el = document.createElement('div');
     el.className = 'floating-num';
-    el.textContent = text; // <--- yahan text parameter set hoga
+    el.textContent = text;
     el.style.position = 'absolute';
     el.style.left = `${x}px`;
     el.style.top = `${y}px`;
@@ -167,5 +191,16 @@ setInterval(() => {
     if (energy < maxEnergy) {
         energy = Math.min(maxEnergy, energy + 2);
         updateUI();
+        saveEnergy();
     }
 }, 1000);
+
+// Level Badge Click Event Listener for Ad Upgrade
+const levelBadgeBtn = document.getElementById('levelBadge');
+if (levelBadgeBtn) {
+    levelBadgeBtn.addEventListener('click', () => {
+        LevelSystem.watchAdToUpgrade(() => {
+            console.log("Level upgraded successfully!");
+        });
+    });
+}
