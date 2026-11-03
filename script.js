@@ -5,6 +5,15 @@ import { LevelSystem } from './levelSystem.js';
 const myProfile = UserProfile.initProfile();
 LevelSystem.init();
 
+// Profile aur Level UI Elements ko update karne ke liye
+const userEmojiEl = document.getElementById('userEmoji');
+const userIdTextEl = document.getElementById('userIdText');
+const currentLevelNumEl = document.getElementById('currentLevelNum');
+
+if (userEmojiEl) userEmojiEl.textContent = myProfile.emoji;
+if (userIdTextEl) userIdTextEl.textContent = myProfile.userId;
+if (currentLevelNumEl) currentLevelNumEl.textContent = LevelSystem.currentLevel;
+
 // Safe initialization for Telegram WebApp
 let tg = window.Telegram && window.Telegram.WebApp ? window.Telegram.WebApp : null;
 if (tg && tg.expand) {
