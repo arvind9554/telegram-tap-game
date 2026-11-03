@@ -18,9 +18,12 @@ const db = firebase.firestore();
 function getTelegramUserId() {
     let userId = null;
 
-    // Telegram Mini App User ID
-    if (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.initDataUnsafe?.user) {
-        userId = window.Telegram.WebApp.initDataUnsafe.user.id.toString();
+    try {
+        if (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.initDataUnsafe?.user) {
+            userId = window.Telegram.WebApp.initDataUnsafe.user.id.toString();
+        }
+    } catch (e) {
+        console.log("Telegram WebApp context not available, using local fallback.");
     }
 
     // LocalStorage Fallback agar Telegram WebApp context nahi mile
@@ -64,7 +67,7 @@ function initRealtimeSync(onStateUpdate) {
     });
 }
 
-// 5. Save Data to Cloud (Debounce/Interval or Direct Call)
+// 5. Save Data to Cloud (Direct Call)
 function saveProgressToCloud(gameState) {
     userDocRef.set({
         coins: gameState.coins,
@@ -93,7 +96,7 @@ const userIdTextEl = document.getElementById('userIdText');
 const currentLevelNumEl = document.getElementById('currentLevelNum');
 
 if (userEmojiEl) userEmojiEl.textContent = myProfile.emoji;
-if (userIdTextEl) userIdTextEl.textContent = myProfile.userId;
+if (userIdTextEl) userIdTextEl.textContent = CURRENT_USER_ID; // Telegram ID display
 if (currentLevelNumEl) currentLevelNumEl.textContent = LevelSystem.currentLevel;
 
 // Safe initialization for Telegram WebApp
@@ -106,54 +109,12 @@ let score = 0;
 let energy = 1000;
 const maxEnergy = 1000;
 
-// 1. Sabse pehle DOM Elements ko define karein (Taaki undefined ki error na aaye)
+// 1. Sabse pehle DOM Elements ko define karein
 const scoreDisplay = document.getElementById('score');
 const energyText = document.getElementById('energyText');
 const energyFill = document.getElementById('energyFill');
 const coinWrapper = document.getElementById('coinWrapper');
 const coin = document.getElementById('coin');
-
-// --- LocalStorage Functions (User-Specific Isolated Storage) ---
-function loadScore(callback) {
-    try {
-        const value = localStorage.getItem(USER_COIN_KEY);
-        if (value !== null) {
-            callback(parseInt(value, 10));
-        } else {
-            callback(0);
-        }
-    } catch (err) {
-        callback(0);
-    }
-}
-
-function saveScore(coins) {
-    try {
-        localStorage.setItem(USER_COIN_KEY, coins.toString());
-    } catch (err) {
-        console.log('Failed to save score:', err);
-    }
-}
-
-// Load saved Energy for this specific user
-function loadEnergy() {
-    try {
-        const savedEnergy = localStorage.getItem(USER_ENERGY_KEY);
-        if (savedEnergy !== null) {
-            energy = parseInt(savedEnergy, 10);
-        }
-    } catch (err) {
-        console.log('Failed to load energy:', err);
-    }
-}
-
-function saveEnergy() {
-    try {
-        localStorage.setItem(USER_ENERGY_KEY, energy.toString());
-    } catch (err) {
-        console.log('Failed to save energy:', err);
-    }
-}
 
 // Update Score and Energy Bar
 function updateUI() {
@@ -162,16 +123,19 @@ function updateUI() {
     if (energyFill) energyFill.style.width = `${(energy / maxEnergy) * 100}%`;
 }
 
-// 2. Ab LocalStorage se saved score aur energy fetch karein
-loadScore((savedScore) => {
-    score = savedScore;
-    loadEnergy();
+// 2. Real-time Firebase Sync Initialize Karein (Cloud se data aate hi UI update hoga)
+initRealtimeSync((cloudData) => {
+    score = cloudData.coins || 0;
+    energy = cloudData.energy || 1000;
+    if (cloudData.level && LevelSystem) {
+        LevelSystem.currentLevel = cloudData.level;
+    }
     updateUI();
 });
 
 // Handle Tapping (Multi-touch & Mouse support)
 function handleTap(clientX, clientY) {
-    const tapPower = LevelSystem.getTapPower(); // Level 1 par 1, Level 2 par 7, Level 3 par 15
+    const tapPower = LevelSystem.getTapPower(); 
     if (energy < tapPower) return;
 
     // Deduct Energy & Increase Score
@@ -181,15 +145,23 @@ function handleTap(clientX, clientY) {
     // Score update ke sath hi automatic level check bhi ho jayega
     LevelSystem.checkAutoUpgrade(score);
     updateUI();
-    saveScore(score); // Har tap par score save hota rahega
-    saveEnergy();     // Energy bhi save hoti rahegi
+
+    // Local & Cloud Save
+    saveScore(score); 
+    saveEnergy();     
+    saveProgressToCloud({
+        coins: score,
+        energy: energy,
+        maxEnergy: maxEnergy,
+        level: LevelSystem.currentLevel
+    });
 
     // Haptic Feedback (Only runs inside Telegram)
     if (tg && tg.HapticFeedback) {
         tg.HapticFeedback.impactOccurred('light');
     }
 
-    // Floating Animation with Dynamic Level Multiplier (+1, +7, +15)
+    // Floating Animation
     createFloatingText(clientX, clientY, `+${tapPower}`);
 
     // 3D Tilt Effect on Tap Point
@@ -228,6 +200,34 @@ if (coinWrapper) {
     });
 }
 
+function loadScore(callback) {
+    try {
+        const value = localStorage.getItem(USER_COIN_KEY);
+        callback(value !== null ? parseInt(value, 10) : 0);
+    } catch (err) {
+        callback(0);
+    }
+}
+
+function saveScore(coins) {
+    try {
+        localStorage.setItem(USER_COIN_KEY, coins.toString());
+    } catch (err) {}
+}
+
+function loadEnergy() {
+    try {
+        const savedEnergy = localStorage.getItem(USER_ENERGY_KEY);
+        if (savedEnergy !== null) energy = parseInt(savedEnergy, 10);
+    } catch (err) {}
+}
+
+function saveEnergy() {
+    try {
+        localStorage.setItem(USER_ENERGY_KEY, energy.toString());
+    } catch (err) {}
+}
+
 function createFloatingText(x, y, text = '+1') {
     const el = document.createElement('div');
     el.className = 'floating-num';
@@ -241,10 +241,7 @@ function createFloatingText(x, y, text = '+1') {
     el.style.pointerEvents = 'none';
 
     document.body.appendChild(el);
-
-    setTimeout(() => {
-        el.remove();
-    }, 700);
+    setTimeout(() => el.remove(), 700);
 }
 
 // Particle Burst Effect using Confetti SDK
@@ -270,6 +267,12 @@ setInterval(() => {
         energy = Math.min(maxEnergy, energy + 2);
         updateUI();
         saveEnergy();
+        saveProgressToCloud({
+            coins: score,
+            energy: energy,
+            maxEnergy: maxEnergy,
+            level: LevelSystem.currentLevel
+        });
     }
 }, 1000);
 
@@ -279,6 +282,12 @@ if (levelBadgeBtn) {
     levelBadgeBtn.addEventListener('click', () => {
         LevelSystem.watchAdToUpgrade(() => {
             console.log("Level upgraded successfully!");
+            saveProgressToCloud({
+                coins: score,
+                energy: energy,
+                maxEnergy: maxEnergy,
+                level: LevelSystem.currentLevel
+            });
         });
     });
 }
