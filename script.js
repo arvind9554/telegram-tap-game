@@ -5,6 +5,8 @@ import { LevelSystem } from './levelSystem.js';
 const myProfile = UserProfile.initProfile();
 LevelSystem.init();
 
+
+
 // Profile aur Level UI Elements ko update karne ke liye
 const userEmojiEl = document.getElementById('userEmoji');
 const userIdTextEl = document.getElementById('userIdText');

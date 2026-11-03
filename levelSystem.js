@@ -63,3 +63,6 @@ export const LevelSystem = {
         }, 2000);
     }
 };
+
+// Is line ko levelSystem.js ke bilkul aakhir me add kar dein:
+window.LevelSystem = LevelSystem;
