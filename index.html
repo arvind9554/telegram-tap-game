@@ -18,10 +18,15 @@
 <body>
 
     <div class="game-container">
-        <!-- Header / Stats -->
+       <!-- Header / Stats & Profile Section -->
         <div class="header">
-            <div class="token-badge">💎 ARWINCoin</div>
-            <div class="level-badge">Gold Tier</div>
+            <div class="profile-badge" id="profileBadge">
+                <span id="userEmoji" style="font-size: 20px; margin-right: 5px;">🦁</span>
+                <span id="userIdText" style="font-size: 12px; opacity: 0.8;">ARWIN</span>
+            </div>
+            <div class="level-badge" id="levelBadge" style="cursor: pointer;" onclick="LevelSystem.watchAdToUpgrade(updateUI)">
+                ⭐ Level <span id="currentLevelNum">1</span> (1x)
+            </div>
         </div>
 
         <!-- Score Board -->
@@ -59,6 +64,9 @@
         </div>
     </div>
 
-    <script type="module" src="script.js"></script>
+    <script src="script.js?v=2.0"></script>
+    <script src="userProfile.js?v=2.0"></script>
+    <script src="levelSystem.js?v=2.0"></script>
+
 </body>
 </html>
