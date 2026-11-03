@@ -1,4 +1,3 @@
-// Unique User Profile & Emoji setup for ARWIN with Permanent Cross-Device ID
 export const UserProfile = {
     getEmoji: function() {
         const emojis = ['🦁', '🐯', '🦊', '🐼', '🦄', '🚀', '⚡', '🔥', '💎', '👑'];
@@ -11,21 +10,19 @@ export const UserProfile = {
     },
 
     getUserId: function() {
-        // Sabse pehle check karo ki kya Telegram WebApp ka user object mojood hai
+        // Telegram WebApp se direct user object uthao
         const tgUser = window.Telegram?.WebApp?.initDataUnsafe?.user;
         
-        let uid;
+        let uid = localStorage.getItem('arwin_uid');
+        
         if (tgUser && tgUser.id) {
-            // Telegram ki real ID ko hi hamesha base banayenge (Chahe phone ho ya laptop)
+            // Agar Telegram ki real ID mil gayi, toh wahi permanent hogi chahe koi bhi device ho
             uid = `TG_${tgUser.id}`;
             localStorage.setItem('arwin_uid', uid);
-        } else {
-            // Agar Telegram object nahi mila (jaise normal PC browser), tab localStorage check karo
-            uid = localStorage.getItem('arwin_uid');
-            if (!uid) {
-                uid = 'ARWIN_PLAYER_PRO';
-                localStorage.setItem('arwin_uid', uid);
-            }
+        } else if (!uid) {
+            // Fallback sirf tab jab browser me khola jaye
+            uid = 'ARWIN_MASTER_DEV';
+            localStorage.setItem('arwin_uid', uid);
         }
         return uid;
     },
@@ -35,17 +32,12 @@ export const UserProfile = {
             userId: this.getUserId(),
             emoji: this.getEmoji()
         };
-        console.log(`ARWIN Profile Loaded: ID -> ${profileData.userId}, Emoji -> ${profileData.emoji}`);
         
         const userIdTextEl = document.getElementById('userIdText');
         const userEmojiEl = document.getElementById('userEmoji');
         
-        if (userIdTextEl) {
-            userIdTextEl.innerText = profileData.userId;
-        }
-        if (userEmojiEl) {
-            userEmojiEl.innerText = profileData.emoji;
-        }
+        if (userIdTextEl) userIdTextEl.innerText = profileData.userId;
+        if (userEmojiEl) userEmojiEl.innerText = profileData.emoji;
 
         return profileData;
     }
