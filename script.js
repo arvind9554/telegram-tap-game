@@ -4,16 +4,6 @@ if (tg && tg.expand) {
     tg.expand();
 }
 
-let score = 0;
-let energy = 1000;
-const maxEnergy = 1000;
-
-// Game load hote hi LocalStorage se saved score fetch karne ke liye:
-loadScore((savedScore) => {
-    score = savedScore;
-    updateUI();
-});
-
 // --- LocalStorage Functions (Zero Cost Score Saving) ---
 function loadScore(callback) {
     try {
@@ -35,6 +25,18 @@ function saveScore(coins) {
         console.log('Failed to save score:', err);
     }
 }
+
+let score = 0;
+let energy = 1000;
+const maxEnergy = 1000;
+
+// Game load hote hi LocalStorage se saved score fetch karne ke liye:
+loadScore((savedScore) => {
+    score = savedScore;
+    updateUI();
+});
+
+
 
 const scoreDisplay = document.getElementById('score');
 const energyText = document.getElementById('energyText');
