@@ -1,4 +1,4 @@
-// 1. Firebase Config Setup (Aapka Naya Project)
+// 1. Firebase Config Setup
 const firebaseConfig = {
     apiKey: "AIzaSyABQ5xvxqFkDIfaaNsC6XYSrBKK_s1NDhk",
     authDomain: "arwintapgame.firebaseapp.com",
@@ -8,25 +8,20 @@ const firebaseConfig = {
     appId: "1:370905895031:web:ec60e3f6c1fc089a2cf672"
 };
 
-// 2. Initialize Firebase & Firestore
 if (!firebase.apps.length) {
     firebase.initializeApp(firebaseConfig);
 }
 const db = firebase.firestore();
 
-// 3. Persistent Unique User ID Fetch (Telegram WebApp + Fallback)
+// 2. Persistent Unique User ID Fetch
 function getTelegramUserId() {
     let userId = null;
-
     try {
         if (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.initDataUnsafe?.user) {
             userId = window.Telegram.WebApp.initDataUnsafe.user.id.toString();
         }
-    } catch (e) {
-        console.log("Telegram WebApp context not available, using local fallback.");
-    }
+    } catch (e) {}
 
-    // LocalStorage Fallback agar Telegram WebApp context nahi mile
     if (!userId) {
         userId = localStorage.getItem('arwin_game_uid');
         if (!userId) {
