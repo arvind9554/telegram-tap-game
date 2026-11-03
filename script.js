@@ -1,3 +1,10 @@
+import { UserProfile } from './userProfile.js';
+import { LevelSystem } from './levelSystem.js';
+
+// Profile initialize karein aur console me check karne ke liye
+const myProfile = UserProfile.initProfile();
+LevelSystem.init();
+
 // Safe initialization for Telegram WebApp
 let tg = window.Telegram && window.Telegram.WebApp ? window.Telegram.WebApp : null;
 if (tg && tg.expand) {
@@ -52,11 +59,15 @@ loadScore((savedScore) => {
 
 // Handle Tapping (Multi-touch & Mouse support)
 function handleTap(clientX, clientY) {
-    if (energy <= 0) return;
+    const tapPower = LevelSystem.getTapPower(); // Level 1 par 1, Level 2 par 7, Level 3 par 15
+    if (energy < tapPower) return;
 
     // Deduct Energy & Increase Score
-    energy -= 1;
-    score += 1;
+    energy -= tapPower;
+    score += tapPower;
+
+    // Score update ke sath hi automatic level check bhi ho jayega
+    LevelSystem.checkAutoUpgrade(score);
     updateUI();
     saveScore(score); // Har tap par score save hota rahega
 
@@ -65,8 +76,8 @@ function handleTap(clientX, clientY) {
         tg.HapticFeedback.impactOccurred('light');
     }
 
-    // Floating +1 Animation
-    createFloatingText(clientX, clientY);
+    // Floating Animation with Dynamic Level Multiplier (+1, +7, +15)
+    createFloatingText(clientX, clientY, `+${tapPower}`);
 
     // 3D Tilt Effect on Tap Point
     if (coinWrapper && coin) {
@@ -104,16 +115,16 @@ if (coinWrapper) {
     });
 }
 
-// Floating Text Creation
-function createFloatingText(x, y) {
+function createFloatingText(x, y, text = '+1') {
     const el = document.createElement('div');
     el.className = 'floating-num';
-    el.textContent = '+1';
+    el.textContent = text; // <--- yahan text parameter set hoga
     el.style.position = 'absolute';
     el.style.left = `${x}px`;
     el.style.top = `${y}px`;
     el.style.color = '#facc15';
     el.style.fontWeight = 'bold';
+    el.style.fontSize = '20px';
     el.style.pointerEvents = 'none';
 
     document.body.appendChild(el);
