@@ -8,6 +8,34 @@ let score = 0;
 let energy = 1000;
 const maxEnergy = 1000;
 
+// Game load hote hi LocalStorage se saved score fetch karne ke liye:
+loadScore((savedScore) => {
+    score = savedScore;
+    updateUI();
+});
+
+// --- LocalStorage Functions (Zero Cost Score Saving) ---
+function loadScore(callback) {
+    try {
+        const value = localStorage.getItem('arwin_coins');
+        if (value !== null) {
+            callback(parseInt(value, 10));
+        } else {
+            callback(0);
+        }
+    } catch (err) {
+        callback(0);
+    }
+}
+
+function saveScore(coins) {
+    try {
+        localStorage.setItem('arwin_coins', coins.toString());
+    } catch (err) {
+        console.log('Failed to save score:', err);
+    }
+}
+
 const scoreDisplay = document.getElementById('score');
 const energyText = document.getElementById('energyText');
 const energyFill = document.getElementById('energyFill');
@@ -22,6 +50,7 @@ function handleTap(clientX, clientY) {
     energy -= 1;
     score += 1;
     updateUI();
+    saveScore(score); // <--- Yeh line yahan add karni hai taaki har tap par score save hota rahe
 
     // Haptic Feedback (Only runs inside Telegram)
     if (tg && tg.HapticFeedback) {
