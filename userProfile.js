@@ -10,20 +10,21 @@ export const UserProfile = {
         return savedEmoji;
     },
 
-    getUserId: function() {
+  getUserId: function() {
         let uid = localStorage.getItem('arwin_uid');
-        if (!uid) {
-            // Check if Telegram WebApp user data is available
-            const tgUser = window.Telegram?.WebApp?.initDataUnsafe?.user;
-            if (tgUser && tgUser.id) {
-                // Use actual Telegram username or first name + ID if available
-                uid = tgUser.username ? `@${tgUser.username}` : `${tgUser.first_name}_${tgUser.id}`;
-            } else {
-                // Fallback for regular browser testing
-                uid = 'ARWIN_' + Math.floor(100000 + Math.random() * 900000);
-            }
-            localStorage.setItem('arwin_uid', uid);
+        
+        // Telegram WebApp ka user data check karo
+        const tgUser = window.Telegram?.WebApp?.initDataUnsafe?.user;
+        
+        if (tgUser && tgUser.id) {
+            // Agar Telegram user ID milti hai, toh hamesha permanent Telegram ID hi use hogi (chahe phone ho ya laptop)
+            uid = `TG_${tgUser.id}`;
+        } else if (!uid) {
+            // Agar Telegram data bilkul na mile (jaise normal PC browser me), tabhi random fallback banega
+            uid = 'ARWIN_' + Math.floor(100000 + Math.random() * 900000);
         }
+        
+        localStorage.setItem('arwin_uid', uid);
         return uid;
     },
 
