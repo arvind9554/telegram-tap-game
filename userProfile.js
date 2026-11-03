@@ -11,20 +11,22 @@ export const UserProfile = {
     },
 
     getUserId: function() {
-        let uid = localStorage.getItem('arwin_uid');
-        
-        // 1. Pehle check karo ki kya Telegram WebApp user data available hai
+        // Sabse pehle check karo ki kya Telegram WebApp ka user object mojood hai
         const tgUser = window.Telegram?.WebApp?.initDataUnsafe?.user;
         
+        let uid;
         if (tgUser && tgUser.id) {
+            // Telegram ki real ID ko hi hamesha base banayenge (Chahe phone ho ya laptop)
             uid = `TG_${tgUser.id}`;
-        } else if (!uid) {
-            // 2. Agar pehle se koi UID localStorage me nahi hai aur Telegram data bhi nahi mila,
-            // toh random generate karne ki jagah ek fixed Master ID use karo taaki phone aur PC par same rahe!
-            uid = 'ARWIN_PLAYER_PRO';
+            localStorage.setItem('arwin_uid', uid);
+        } else {
+            // Agar Telegram object nahi mila (jaise normal PC browser), tab localStorage check karo
+            uid = localStorage.getItem('arwin_uid');
+            if (!uid) {
+                uid = 'ARWIN_PLAYER_PRO';
+                localStorage.setItem('arwin_uid', uid);
+            }
         }
-        
-        localStorage.setItem('arwin_uid', uid);
         return uid;
     },
 
