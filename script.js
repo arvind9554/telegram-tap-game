@@ -1,3 +1,81 @@
+// 1. Firebase Config Setup (Aapka Naya Project)
+const firebaseConfig = {
+    apiKey: "AIzaSyABQ5xvxqFkDIfaaNsC6XYSrBKK_s1NDhk",
+    authDomain: "arwintapgame.firebaseapp.com",
+    projectId: "arwintapgame",
+    storageBucket: "arwintapgame.firebasestorage.app",
+    messagingSenderId: "370905895031",
+    appId: "1:370905895031:web:ec60e3f6c1fc089a2cf672"
+};
+
+// 2. Initialize Firebase & Firestore
+if (!firebase.apps.length) {
+    firebase.initializeApp(firebaseConfig);
+}
+const db = firebase.firestore();
+
+// 3. Persistent Unique User ID Fetch (Telegram WebApp + Fallback)
+function getTelegramUserId() {
+    let userId = null;
+
+    // Telegram Mini App User ID
+    if (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.initDataUnsafe?.user) {
+        userId = window.Telegram.WebApp.initDataUnsafe.user.id.toString();
+    }
+
+    // LocalStorage Fallback agar Telegram WebApp context nahi mile
+    if (!userId) {
+        userId = localStorage.getItem('arwin_game_uid');
+        if (!userId) {
+            userId = 'user_' + Math.random().toString(36).substring(2, 9);
+            localStorage.setItem('arwin_game_uid', userId);
+        }
+    }
+    return userId;
+}
+
+const CURRENT_USER_ID = getTelegramUserId();
+const userDocRef = db.collection('users').doc(CURRENT_USER_ID);
+
+// 4. Cloud Database Real-time Sync (Listening to changes)
+function initRealtimeSync(onStateUpdate) {
+    userDocRef.onSnapshot((doc) => {
+        if (doc.exists) {
+            const data = doc.data();
+            console.log("Cloud sync updated:", data);
+            
+            // Local game state update karein
+            if (typeof onStateUpdate === 'function') {
+                onStateUpdate(data);
+            }
+        } else {
+            // First-time user defaults setup
+            const initialData = {
+                coins: 0,
+                energy: 1000,
+                maxEnergy: 1000,
+                level: 1,
+                lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
+            };
+            userDocRef.set(initialData);
+        }
+    }, (error) => {
+        console.error("Firestore Listen Error:", error);
+    });
+}
+
+// 5. Save Data to Cloud (Debounce/Interval or Direct Call)
+function saveProgressToCloud(gameState) {
+    userDocRef.set({
+        coins: gameState.coins,
+        energy: gameState.energy,
+        maxEnergy: gameState.maxEnergy || 1000,
+        level: gameState.level || 1,
+        lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
+    }, { merge: true })
+    .catch((err) => console.error("Cloud Save Failed:", err));
+}
+
 import { UserProfile } from './userProfile.js';
 import { LevelSystem } from './levelSystem.js';
 
