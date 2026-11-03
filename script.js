@@ -44,7 +44,7 @@ LevelSystem.init();
 const USER_COIN_KEY = `arwin_coins_${myProfile.userId}`;
 const USER_ENERGY_KEY = `arwin_energy_${myProfile.userId}`;
 
-// Profile aur Level UI Elements ko update karne ke liye
+// UI Elements
 const userEmojiEl = document.getElementById('userEmoji');
 const userIdTextEl = document.getElementById('userIdText');
 const currentLevelNumEl = document.getElementById('currentLevelNum');
@@ -53,7 +53,6 @@ if (userEmojiEl) userEmojiEl.textContent = myProfile.emoji;
 if (userIdTextEl) userIdTextEl.textContent = CURRENT_USER_ID;
 if (currentLevelNumEl) currentLevelNumEl.textContent = LevelSystem.currentLevel;
 
-// Safe initialization for Telegram WebApp
 let tg = window.Telegram && window.Telegram.WebApp ? window.Telegram.WebApp : null;
 if (tg && tg.expand) {
     tg.expand();
@@ -63,21 +62,19 @@ let score = 0;
 let energy = 1000;
 const maxEnergy = 1000;
 
-// DOM Elements
 const scoreDisplay = document.getElementById('score');
 const energyText = document.getElementById('energyText');
 const energyFill = document.getElementById('energyFill');
 const coinWrapper = document.getElementById('coinWrapper');
 const coin = document.getElementById('coin');
 
-// Update UI Function
 function updateUI() {
     if (scoreDisplay) scoreDisplay.textContent = score;
     if (energyText) energyText.textContent = `${energy} / ${maxEnergy}`;
     if (energyFill) energyFill.style.width = `${(energy / maxEnergy) * 100}%`;
 }
 
-// 3. Initial Load: LocalStorage + One-time Cloud Fetch (Only userId & coins)
+// 3. Initial Load: LocalStorage + One-time Cloud Fetch (Strictly UserId & Coins)
 function initUserProgress() {
     const savedScore = localStorage.getItem(USER_COIN_KEY);
     if (savedScore !== null) {
@@ -90,7 +87,6 @@ function initUserProgress() {
     }
     updateUI();
 
-    // Sirf 1 baar cloud se data fetch karke check karna (Quota safe)
     userDocRef.get().then((doc) => {
         if (doc.exists) {
             const cloudData = doc.data();
@@ -100,7 +96,7 @@ function initUserProgress() {
                 updateUI();
             }
         } else {
-            // First time user: Save only userId and coins (+ timestamp)
+            // First time user: Save ONLY userId and coins
             userDocRef.set({
                 userId: CURRENT_USER_ID,
                 coins: score,
@@ -112,7 +108,7 @@ function initUserProgress() {
 
 initUserProgress();
 
-// 4. Lightweight Cloud Save (Stricts to ONLY userId and coins)
+// 4. Lightweight Cloud Save (ONLY userId and coins)
 function saveCoinsToCloud() {
     userDocRef.set({
         userId: CURRENT_USER_ID,
@@ -135,7 +131,7 @@ document.addEventListener("visibilitychange", () => {
     }
 });
 
-// Handle Tapping (Fast Local Storage, No Firebase Spam)
+// Handle Tapping (Fast Local Storage, NO Firebase Hits)
 function handleTap(clientX, clientY) {
     const tapPower = LevelSystem.getTapPower(); 
     if (energy < tapPower) return;
@@ -146,11 +142,10 @@ function handleTap(clientX, clientY) {
     LevelSystem.checkAutoUpgrade(score);
     updateUI();
 
-    // Save locally for smooth performance
+    // Save locally only
     localStorage.setItem(USER_COIN_KEY, score.toString());
     localStorage.setItem(USER_ENERGY_KEY, energy.toString());
 
-    // Haptic Feedback
     if (tg && tg.HapticFeedback) {
         tg.HapticFeedback.impactOccurred('light');
     }
@@ -174,7 +169,6 @@ function handleTap(clientX, clientY) {
     triggerParticles(clientX, clientY);
 }
 
-// Touch & Mouse Event Listeners
 if (coinWrapper) {
     coinWrapper.addEventListener('touchstart', (e) => {
         e.preventDefault();
@@ -211,17 +205,14 @@ function triggerParticles(x, y) {
             particleCount: 5,
             spread: 40,
             startVelocity: 15,
-            origin: {
-                x: x / window.innerWidth,
-                y: y / window.innerHeight
-            },
+            origin: { x: x / window.innerWidth, y: y / window.innerHeight },
             colors: ['#facc15', '#fbbf24', '#ffffff'],
             disableForReducedMotion: true
         });
     }
 }
 
-// Energy Regeneration Logic (Local Only)
+// Energy Regeneration Logic (Local Only, NO Cloud Hits)
 setInterval(() => {
     if (energy < maxEnergy) {
         energy = Math.min(maxEnergy, energy + 2);
@@ -236,7 +227,7 @@ if (levelBadgeBtn) {
     levelBadgeBtn.addEventListener('click', () => {
         LevelSystem.watchAdToUpgrade(() => {
             console.log("Level upgraded successfully!");
-            saveCoinsToCloud(); // Important action par turant sync
+            saveCoinsToCloud(); // Upgrade par sync hoga
         });
     });
 }
